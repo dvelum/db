@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
@@ -29,12 +30,11 @@ declare(strict_types=1);
 
 namespace Dvelum\Db;
 
-use Laminas\Db\Adapter\AdapterInterface;
-use Laminas\Db;
-use Laminas\Db\Metadata\MetadataInterface;
-use Laminas\Db\Metadata\Object\ColumnObject;
-use Laminas\Db\Metadata\Object\ConstraintObject;
 use Dvelum\Db\Metadata\Factory;
+use Laminas\Db;
+use Laminas\Db\Adapter\AdapterInterface;
+use Laminas\Db\Metadata\MetadataInterface;
+use Laminas\Db\Metadata\Object\ConstraintObject;
 
 class Metadata
 {
@@ -52,7 +52,7 @@ class Metadata
         $this->metadata = Factory::createSourceFromAdapter($db);
     }
 
-    public function findPrimaryKey(string $tableName) : ?string
+    public function findPrimaryKey(string $tableName): ?string
     {
         foreach ($this->metadata->getConstraints($tableName) as $constraint) {
             /**
@@ -68,7 +68,7 @@ class Metadata
         return null;
     }
 
-    public function getAdapter() : MetadataInterface
+    public function getAdapter(): MetadataInterface
     {
         return $this->metadata;
     }
@@ -83,12 +83,12 @@ class Metadata
 
     /**
      * @param string $tableName
-     * @return array
+     * @return array<string,Db\Metadata\Object\ColumnObject>
      */
-    public function getColumns(string $tableName) : array
+    public function getColumns(string $tableName): array
     {
         $data = [];
-        foreach ($this->metadata->getColumns($tableName) as $column){
+        foreach ($this->metadata->getColumns($tableName) as $column) {
             /**
              * @var Db\Metadata\Object\ColumnObject $column
              */
@@ -102,44 +102,45 @@ class Metadata
      * @param string $tableName
      * @return ConstraintObject[]
      */
-    public function getConstraints(string $tableName) : array
+    public function getConstraints(string $tableName): array
     {
         return $this->metadata->getConstraints($tableName);
     }
 
     /**
      * @param string $tableName
-     * @return array
+     * @return array{name:string,data_type:string,erratas:mixed,max_len:int,octet_length:int,default:mixed,null:bool,unsigned:bool,scale:int,precision: int}
+     * @phpstan-return array<string,mixed>
      */
-    public function getColumnsAsArray(string $tableName) : array
+    public function getColumnsAsArray(string $tableName): array
     {
         $data = [];
-        foreach ($this->metadata->getColumns($tableName) as $column){
+        foreach ($this->metadata->getColumns($tableName) as $column) {
             /**
              * @var Db\Metadata\Object\ColumnObject $column
              */
             $name = $column->getName();
             $data[$name] = [
-              'name' => $name,
-              'data_type'=> $column->getDataType(),
-              'erratas' =>$column->getErratas(),
-              'max_len'  => $column->getCharacterMaximumLength(),
-              'octet_length'  => $column->getCharacterOctetLength(),
-              'default' => $column->getColumnDefault(),
-              'null' => $column->getIsNullable(),
-              'unsigned' => $column->getNumericUnsigned(),
-              'scale'=> $column->getNumericScale(),
-              'precision'=> $column->getNumericPrecision()
+                'name' => $name,
+                'data_type' => $column->getDataType(),
+                'erratas' => $column->getErratas(),
+                'max_len' => $column->getCharacterMaximumLength(),
+                'octet_length' => $column->getCharacterOctetLength(),
+                'default' => $column->getColumnDefault(),
+                'null' => $column->getIsNullable(),
+                'unsigned' => $column->getNumericUnsigned(),
+                'scale' => $column->getNumericScale(),
+                'precision' => $column->getNumericPrecision()
             ];
         }
         return $data;
     }
 
     /**
-     * @param array $columns
+     * @param array<int,string> $columns
      * @return string
      */
-    public function indexHashByColumns(array $columns) : string
+    public function indexHashByColumns(array $columns): string
     {
         return implode('_', $columns);
     }

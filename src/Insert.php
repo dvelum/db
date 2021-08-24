@@ -1,4 +1,5 @@
 <?php
+
 /**
  *  DVelum project https://github.com/dvelum/dvelum
  *  Copyright (C) 2011-2017  Kirill Yegorov
@@ -35,13 +36,13 @@ class Insert
     /**
      * Insert multiple rows (not safe but fast)
      * @param string $table
-     * @param array $records
-     * @param int $chunkSize, optional default 500
+     * @param array<int,array> $records
+     * @param int $chunkSize , optional default 500
      * @param bool $ignore - optional default false Ignore errors
-     * @throws \Exception
      * @return void
+     * @throws \Exception
      */
-    public function bulkInsert(string $table, array $records, int $chunkSize = 500, bool $ignore = false) : void
+    public function bulkInsert(string $table, array $records, int $chunkSize = 500, bool $ignore = false): void
     {
         if (empty($records)) {
             return;
@@ -80,18 +81,21 @@ class Insert
                 $sql .= 'IGNORE ';
             }
 
-            $sql .= 'INTO ' . $this->db->quoteIdentifier($table) . ' (' . $keys . ') ' . "\n" . ' VALUES ' . "\n" . '(' . implode(')' . "\n" . ',(',
-                    array_values($rowset)) . ') ' . "\n" . '';
+            $sql .= 'INTO ' . $this->db->quoteIdentifier(
+                    $table
+                ) . ' (' . $keys . ') ' . "\n" . ' VALUES ' . "\n" . '(' . implode(
+                    ')' . "\n" . ',(',
+                    array_values($rowset)
+                ) . ') ' . "\n" . '';
 
             $this->db->query($sql);
-
         }
     }
 
     /**
      * Insert single record on duplicate key update
      * @param string $table
-     * @param array $data
+     * @param array<int|string,mixed> $data
      * @return void
      * @throws \Exception
      */
@@ -110,18 +114,20 @@ class Insert
 
         $values = array_values($data);
         foreach ($values as &$val) {
-            if(is_bool($val)){
+            if (is_bool($val)) {
                 $val = intval($val);
-            }elseif (is_null($val)){
+            } elseif (is_null($val)) {
                 $val = 'NULL';
-            }else{
+            } else {
                 $val = $this->db->quote($val);
             }
         }
         unset($val);
 
-        $sql = 'INSERT INTO ' . $this->db->quoteIdentifier($table) . ' (' . implode(',',
-                $keys) . ') VALUES (' . implode(',', $values) . ') ON DUPLICATE KEY UPDATE ';
+        $sql = 'INSERT INTO ' . $this->db->quoteIdentifier($table) . ' (' . implode(
+                ',',
+                $keys
+            ) . ') VALUES (' . implode(',', $values) . ') ON DUPLICATE KEY UPDATE ';
 
         $updates = [];
         foreach ($keys as $key) {
@@ -135,10 +141,10 @@ class Insert
     /**
      * Insert record
      * @param string $table
-     * @param array $data
+     * @param array<int|string,mixed> $data
      * @return void
      */
-    public function insert(string $table, array $data) : void
+    public function insert(string $table, array $data): void
     {
         $this->db->insert($table, $data);
     }

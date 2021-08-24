@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
@@ -44,33 +45,34 @@ class Query
     protected $db;
 
     /**
-     * @var array|null
+     * @var array<int|string,Filter|mixed>|null
      */
     protected $filters = null;
     /**
-     * @var array|null
+     * @phpstan-var array<string,string|int>|null
+     * @var array{sort:string,dir:string,start:int,limit:int}|null
      */
-    protected $params = null;
+    protected ?array $params = null;
     /**
-     * @var array|string
+     * @var array<int|string,string>
      */
-    protected $fields = ['*'];
+    protected array $fields = ['*'];
     /**
-     * @var array|null
+     * @var array<int,array>|null
      */
-    protected $joins = null;
+    protected ?array $joins = null;
+    /**
+     * @var string
+     */
+    protected string $table;
     /**
      * @var string|null
      */
-    protected $table = null;
-    /**
-     * @var string|null
-     */
-    protected $tableAlias = null;
+    protected ?string $tableAlias = null;
     /**
      * @var bool
      */
-    protected $distinct = false;
+    protected bool $distinct = false;
 
     public function __construct(Model $model)
     {
@@ -84,7 +86,7 @@ class Query
      * @param Adapter $connection
      * @return Query
      */
-    public function setDbConnection(Adapter $connection) : self
+    public function setDbConnection(Adapter $connection): self
     {
         $this->db = $connection;
         return $this;
@@ -111,7 +113,7 @@ class Query
     }
 
     /**
-     * @param array|null $filters
+     * @param array<int|string,mixed>|null $filters
      * @return Query
      */
     public function filters(?array $filters): Query
@@ -121,7 +123,7 @@ class Query
     }
 
     /**
-     * @param array|null $params
+     * @param array<string,int|string>|null $params
      * @return Query
      */
     public function params(?array $params): Query
@@ -141,7 +143,7 @@ class Query
     }
 
     /**
-     * @param array|null $joins
+     * @param array<int,array>|null $joins
      * Config Example:
      * array(
      *        array(
@@ -163,19 +165,20 @@ class Query
     /**
      * Apply query filters
      * @param Db\Select $sql
-     * @param array $filters
+     * @param array<int|string, mixed> $filters
      * @return void
      */
     public function applyFilters(Db\Select $sql, array $filters): void
     {
         foreach ($filters as $k => $v) {
+            $k = (string) $k;
             if ($v instanceof Filter) {
                 $v->applyTo($this->db, $sql);
             } else {
                 if (is_array($v) && !empty($v)) {
                     $sql->where($this->db->quoteIdentifier($k) . ' IN(?)', $v);
                 } elseif (is_bool($v)) {
-                    $sql->where($this->db->quoteIdentifier($k) . ' = ' . intval($v));
+                    $sql->where($this->db->quoteIdentifier($k) . ' = ' . (int)($v));
                 } elseif ((is_string($v) && strlen($v)) || is_numeric($v)) {
                     $sql->where($this->db->quoteIdentifier($k) . ' =?', $v);
                 } elseif (is_null($v)) {
@@ -188,16 +191,17 @@ class Query
     /**
      * Apply query params (sorting and pagination)
      * @param Db\Select $sql
-     * @param array $params
+     * @phpstan-param array<string,mixed> $params
+     * @param array{start:int,limit:int,sort:array|string,dir:array|string} $params
      */
-    public function applyParams($sql, array $params): void
+    public function applyParams(Db\Select $sql, array $params): void
     {
         if (isset($params['limit'])) {
-            $sql->limit(intval($params['limit']));
+            $sql->limit((int)$params['limit']);
         }
 
         if (isset($params['start'])) {
-            $sql->offset(intval($params['start']));
+            $sql->offset((int)$params['start']);
         }
 
         if (!empty($params['sort']) && !empty($params['dir'])) {
@@ -223,14 +227,13 @@ class Query
     /**
      * Apply Join conditions
      * @param Db\Select $sql
-     * @param array $joins
+     * @param array<int, array> $joins
      * @return void
      */
-    public function applyJoins(Db\Select $sql, array $joins) : void
+    public function applyJoins(Db\Select $sql, array $joins): void
     {
         foreach ($joins as $config) {
             switch ($config['joinType']) {
-
                 case 'joinLeft' :
                 case 'left':
                     $sql->join($config['table'], $config['condition'], $config['fields'], Db\Select::JOIN_LEFT);
@@ -275,7 +278,7 @@ class Query
             $this->applyJoins($sql, $this->joins);
         }
 
-        if(!empty($this->distinct)){
+        if (!empty($this->distinct)) {
             $sql->distinct();
         }
 
@@ -292,7 +295,7 @@ class Query
 
     /**
      * Fetch all records
-     * @return array
+     * @return array<int,array>
      * @throws \Exception
      */
     public function fetchAll(): array
@@ -322,7 +325,7 @@ class Query
 
     /**
      * Fetch first result row
-     * @return array
+     * @return array<int|string,mixed>
      * @throws \Exception
      */
     public function fetchRow(): array
@@ -341,7 +344,7 @@ class Query
 
     /**
      * Fetch column
-     * @return array
+     * @return array<int,mixed>
      * @throws \Exception
      */
     public function fetchCol(): array
@@ -381,8 +384,8 @@ class Query
             ->filters($filters)
             ->joins($joins);
 
-        if(!empty($this->tableAlias)){
-            $sqlQuery->tableAlias((string) $this->tableAlias);
+        if (!empty($this->tableAlias)) {
+            $sqlQuery->tableAlias((string)$this->tableAlias);
         }
 
         $count = $sqlQuery->fetchOne();
@@ -399,7 +402,7 @@ class Query
      * @param bool $bool
      * @return $this
      */
-    public function distinct(bool $bool =  true) : self
+    public function distinct(bool $bool = true): self
     {
         $this->distinct = $bool;
         return $this;

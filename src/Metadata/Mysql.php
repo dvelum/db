@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
@@ -29,8 +30,8 @@ declare(strict_types=1);
 
 namespace Dvelum\Db\Metadata;
 
-use Laminas\Db\Metadata\Source\MysqlMetadata;
 use Laminas\Db\Adapter\Adapter;
+use Laminas\Db\Metadata\Source\MysqlMetadata;
 use Laminas\Db\ResultSet\AbstractResultSet;
 
 class Mysql extends MysqlMetadata
@@ -90,7 +91,7 @@ class Mysql extends MysqlMetadata
          */
         $results = $this->adapter->query($sql, Adapter::QUERY_MODE_EXECUTE);
 
-        if(empty($results)){
+        if (empty($results)) {
             return;
         }
         $columns = [];
@@ -113,24 +114,24 @@ class Mysql extends MysqlMetadata
                 $erratas['permitted_values'] = $permittedValues;
             }
 
-            if(strpos($row['EXTRA'],'auto_increment')!==false){
+            if (strpos($row['EXTRA'], 'auto_increment') !== false) {
                 $isAutoIncrement = true;
-            }else{
+            } else {
                 $isAutoIncrement = false;
             }
 
             $columns[$row['COLUMN_NAME']] = [
-                'ordinal_position'          => $row['ORDINAL_POSITION'],
-                'column_default'            => $row['COLUMN_DEFAULT'],
-                'is_nullable'               => ('YES' == $row['IS_NULLABLE']),
-                'data_type'                 => $row['DATA_TYPE'],
-                'character_maximum_length'  => $row['CHARACTER_MAXIMUM_LENGTH'],
-                'character_octet_length'    => $row['CHARACTER_OCTET_LENGTH'],
-                'numeric_precision'         => $row['NUMERIC_PRECISION'],
-                'numeric_scale'             => $row['NUMERIC_SCALE'],
-                'numeric_unsigned'          => (false !== strpos($row['COLUMN_TYPE'], 'unsigned')),
-                'erratas'                   => $erratas,
-                'auto_increment'            => $isAutoIncrement
+                'ordinal_position' => $row['ORDINAL_POSITION'],
+                'column_default' => $row['COLUMN_DEFAULT'],
+                'is_nullable' => ('YES' == $row['IS_NULLABLE']),
+                'data_type' => $row['DATA_TYPE'],
+                'character_maximum_length' => $row['CHARACTER_MAXIMUM_LENGTH'],
+                'character_octet_length' => $row['CHARACTER_OCTET_LENGTH'],
+                'numeric_precision' => $row['NUMERIC_PRECISION'],
+                'numeric_scale' => $row['NUMERIC_SCALE'],
+                'numeric_unsigned' => (false !== strpos($row['COLUMN_TYPE'], 'unsigned')),
+                'erratas' => $erratas,
+                'auto_increment' => $isAutoIncrement
             ];
         }
         $this->data['columns'][$schema][$table] = $columns;
@@ -147,7 +148,7 @@ class Mysql extends MysqlMetadata
 
         $this->loadColumnData($table, $schema);
 
-        if (! isset($this->data['columns'][$schema][$table][$columnName])) {
+        if (!isset($this->data['columns'][$schema][$table][$columnName])) {
             throw new \Exception('A column by that name was not found.');
         }
 
@@ -155,9 +156,15 @@ class Mysql extends MysqlMetadata
 
         $column = new ColumnObject($columnName, $table, $schema);
         $props = [
-            'ordinal_position', 'column_default', 'is_nullable',
-            'data_type', 'character_maximum_length', 'character_octet_length',
-            'numeric_precision', 'numeric_scale', 'numeric_unsigned',
+            'ordinal_position',
+            'column_default',
+            'is_nullable',
+            'data_type',
+            'character_maximum_length',
+            'character_octet_length',
+            'numeric_precision',
+            'numeric_scale',
+            'numeric_unsigned',
             'erratas'
         ];
         foreach ($props as $prop) {

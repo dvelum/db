@@ -8,8 +8,6 @@
     <exclude>
       <directory suffix=".phtml">./</directory>
       <file>./bootstrap.php</file>
-      <file>./console.php</file>
-      <file>./console_client.php</file>
     </exclude>
     <report>
       <html outputDirectory="./data/phpunit_report" lowUpperBound="35" highLowerBound="70"/>

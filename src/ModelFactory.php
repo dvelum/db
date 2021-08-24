@@ -1,10 +1,11 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
  * MIT License
  *
- * Copyright (C) 2011-2020  Kirill Yegorov
+ * Copyright (C) 2011-2021  Kirill Yegorov
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +28,38 @@
  */
 declare(strict_types=1);
 
-namespace Dvelum\Db\Adapter;
+namespace Dvelum\Db;
 
-use Dvelum\Db\Adapter;
+use Dvelum\Cache\CacheInterface;
+use Psr\Log\LoggerInterface;
 
-class MySQLi extends Adapter {
+class ModelFactory
+{
+    private ManagerInterface $dbManager;
+    private ?LoggerInterface $log;
+    private ?CacheInterface $cache;
 
+    /**
+     * @var array<string,Model>
+     */
+    private array $registry;
+
+    public function __construct(ManagerInterface $dbManager, LoggerInterface $log = null, ?CacheInterface $cache = null)
+    {
+        $this->dbManager = $dbManager;
+        $this->log = $log;
+        $this->cache = $cache;
+    }
+
+    /**
+     * @param string $class
+     * @return Model
+     */
+    public function model(string $class): Model
+    {
+        if (!isset($this->registry[$class])) {
+            $this->registry[$class] = new $class($this->dbManager, $this->log, $this->cache);
+        }
+        return $this->registry[$class];
+    }
 }

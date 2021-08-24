@@ -34,6 +34,7 @@
  */
 
 namespace Dvelum\Db\Metadata;
+
 use Laminas\Db\Metadata\Object\ColumnObject as LaminasColumnObject;
 
 
@@ -59,7 +60,7 @@ class ColumnObject extends LaminasColumnObject
      * @param bool $autoIncrement
      * @return void
      */
-    public function setAutoIncrement(bool $autoIncrement) : void
+    public function setAutoIncrement(bool $autoIncrement): void
     {
         $this->autoIncrement = $autoIncrement;
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
@@ -33,6 +34,7 @@ namespace Dvelum\Db;
 use Dvelum\Cache\CacheInterface;
 use Dvelum\Log\LogInterface;
 use Dvelum\Service;
+use Psr\Log\LoggerInterface;
 
 abstract class Model
 {
@@ -46,59 +48,35 @@ abstract class Model
      */
     protected $connection;
     /**
-     * @var Manager
+     * @var ManagerInterface
      */
-    protected $dbManager;
+    protected ManagerInterface $dbManager;
     /**
      * @var \Dvelum\Db\Adapter
      */
     protected $db;
     /**
-     * @var CacheInterface|false
+     * @var CacheInterface|null
      */
-    protected $cache;
+    protected ?CacheInterface $cache;
     /**
-     * @var LogInterface|null
+     * @var LoggerInterface|null
      */
-    protected $log;
+    protected ?LoggerInterface $log;
 
-    /**
-     * @return static
-     * @throws \Exception
-     */
-    static public function factory(): self
-    {
-        static $instance = null;
-
-        if (empty($instance)) {
-            $log = null;
-            if (Service::isRegistered('Log')) {
-                /**
-                 * @var LogInterface $log
-                 */
-                $log = Service::get('Log');
-            }
-            /**
-             * @var Manager $dbManager
-             */
-            $dbManager = Service::get('DbManager');
-            $instance = new static($dbManager, $log);
-        }
-        return $instance;
-    }
 
     /**
      * Model constructor.
-     * @param LogInterface|null $log
-     * @param Manager $dbManager
+     * @param LoggerInterface|null $log
+     * @param ManagerInterface $dbManager
      * @throws \Exception
      */
-    protected function __construct(Manager $dbManager, ?LogInterface $log = null)
+    protected function __construct(ManagerInterface $dbManager, ?LoggerInterface $log = null, ?CacheInterface $cache = null)
     {
         $this->log = $log;
         $this->dbManager = $dbManager;
         $this->db = $this->dbManager->getDbConnection($this->connection);
-        $this->cache = Service::get('cache');
+        $this->cache = $cache;
     }
 
     /**
@@ -109,9 +87,13 @@ abstract class Model
     public function logError(string $message): bool
     {
         if (!empty($this->log)) {
-            return $this->log->logError($message);
+            try {
+                $this->log->error($message);
+            } catch (\Throwable $e) {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -168,13 +150,12 @@ abstract class Model
             $this->logError($e->getMessage());
             return false;
         }
-
     }
 
     /**
      * Update record
      * @param int $recordId
-     * @param array $data
+     * @param array<string,mixed> $data
      * @param string $keyField
      * @return bool
      */
@@ -193,7 +174,7 @@ abstract class Model
      * Get record by id
      * @param int $recordId
      * @param string $keyField
-     * @return array
+     * @return array<int|string,mixed>
      * @throws \Exception
      */
     public function getItem(int $recordId, string $keyField = 'id'): array
@@ -210,9 +191,9 @@ abstract class Model
     }
 
     /**
-     * @return LogInterface|null
+     * @return LoggerInterface|null
      */
-    public function getLogsAdapter(): ?LogInterface
+    public function getLogsAdapter(): ?LoggerInterface
     {
         return $this->log;
     }
@@ -222,7 +203,7 @@ abstract class Model
      * @param int $recordId
      * @param int $lifetime
      * @param string $keyField
-     * @return array
+     * @return array<int|string,mixed>
      * @throws \Exception
      */
     public function getCachedItem(int $recordId, int $lifetime, string $keyField = 'id'): array
@@ -244,7 +225,7 @@ abstract class Model
         $data = $this->getItem($recordId, $keyField);
 
         if ($cache) {
-            $cache->save($data, $key, $lifetime);
+            $cache->save($key, $data, $lifetime);
         }
         return $data;
     }

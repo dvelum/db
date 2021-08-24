@@ -23,7 +23,9 @@
     "require": {
         "php":">=7.4.0",
         "ext-mysqli" : "*",
-        "laminas/laminas-db": "^2.11"
+        "laminas/laminas-db": "^2.11",
+        "dvelum/cache":"^4.0",
+        "psr/log": "^1.1"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -31,5 +33,10 @@
         "phpunit/phpunit": "^9",
         "phpstan/phpstan": "^0.12",
         "codacy/coverage": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dvelum\\Db\\": "src/"
+        }
     }
 }

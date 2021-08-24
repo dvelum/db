@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
@@ -28,6 +29,7 @@
 declare(strict_types=1);
 
 namespace Dvelum\Db;
+
 /**
  * Class for building SQL SELECT queries
  * Represents an implementation of the Zend_Db_select interface,
@@ -54,39 +56,45 @@ class Select
      */
     protected $distinct = false;
     /**
-     * @var array
+     * @var array{table:mixed,columns:mixed}
+     * @phpstan-var array<string,mixed>
      */
     protected $from;
+
     /**
-     * @var array
+     * @var array{condition:mixed,bind:mixed}
+     * @phpstan-var array<int,mixed>
      */
     protected $where;
     /**
-     * @var array
+     * @var array<int|string,mixed>
      */
     protected $join;
     /**
-     * @var array
+     * @var array<int,mixed>
      */
     protected $group;
     /**
-     * @var array
+     * @var array{condition:mixed,bind:mixed}
+     * @phpstan-var array<int,mixed>
      */
     protected $having;
     /**
-     * @var array
+     * @var array<string,mixed>
      */
     protected $limit;
     /**
-     * @var array
+     * @var array<string|int,mixed>
      */
     protected $order;
     /**
-     * @var array
+     * @var array{condition:mixed,bind:mixed}
+     * @phpstan-var array<int,mixed>
      */
     protected $orWhere;
     /**
-     * @var array
+     * @var array{condition:mixed,bind:mixed}
+     * @phpstan-var array<int,mixed>
      */
     protected $orHaving;
     /**
@@ -94,13 +102,13 @@ class Select
      */
     protected $forUpdate;
     /**
-     * @var array
+     * @var array<string,string>
      */
     protected $assembleOrder = [
-        '_getDistinct' => 'distinct',
-        '_getFrom' => 'from',
-        '_getJoins' => 'join',
-        '_getWhere' => 'where',
+        'getDistinct' => 'distinct',
+        'getFrom' => 'from',
+        'getJoins' => 'join',
+        'getWhere' => 'where',
         'getOrWhere' => 'orWhere',
         'getGroup' => 'group',
         'getHaving' => 'having',
@@ -108,10 +116,9 @@ class Select
         'getOrder' => 'order',
         'getLimit' => 'limit',
         'getForUpdate' => 'forUpdate'
-
     ];
     /**
-     * @var array
+     * @var array<string,int>
      */
     protected $aliasCount = [];
 
@@ -119,7 +126,7 @@ class Select
      * @param Adapter $adapter
      * @return void
      */
-    public function setDbAdapter(Adapter $adapter) : void
+    public function setDbAdapter(Adapter $adapter): void
     {
         $this->dbAdapter = $adapter;
     }
@@ -128,7 +135,7 @@ class Select
      * Add a DISTINCT clause
      * @return self
      */
-    public function distinct() : self
+    public function distinct(): self
     {
         $this->distinct = true;
         return $this;
@@ -136,17 +143,18 @@ class Select
 
     /**
      * Add a FROM clause to the query
-     * @param mixed $table string table name or array('alias'=>'tablename')
-     * @param mixed $columns
+     * @param string|array<string,string> $table string table name or array('alias'=>'tablename')
+     * @param string|array<int|string,string> $columns
      * @return self
      */
-    public function from($table, $columns = "*") : self
+    public function from($table, $columns = "*"): self
     {
         if (!is_array($columns)) {
-            if ($columns !== '*')
+            if ($columns !== '*') {
                 $columns = $this->convertColumnsString($columns);
-            else
+            } else {
                 $columns = [$columns];
+            }
         }
 
         $this->from = ['table' => $table, 'columns' => $columns];
@@ -155,16 +163,17 @@ class Select
 
     /**
      * Set columns
-     * @param array|string $columns
+     * @param array<int|string,string>|string $columns
      * @return self
      */
-    public function columns($columns = "*") : self
+    public function columns($columns = "*"): self
     {
         if (!is_array($columns)) {
-            if ($columns !== '*')
+            if ($columns !== '*') {
                 $columns = $this->convertColumnsString($columns);
-            else
+            } else {
                 $columns = [$columns];
+            }
         }
         $this->from['columns'] = $columns;
         return $this;
@@ -176,12 +185,13 @@ class Select
      * @param mixed $bind
      * @return self
      */
-    public function where($condition, $bind = false)  : self
+    public function where(string $condition, $bind = false): self
     {
-        if (!is_array($this->where))
-            $this->where = array();
+        if (!is_array($this->where)) {
+            $this->where = [];
+        }
 
-        $this->where[] = array('condition' => $condition, 'bind' => $bind);
+        $this->where[] = ['condition' => $condition, 'bind' => $bind];
         return $this;
     }
 
@@ -191,12 +201,13 @@ class Select
      * @param mixed $bind
      * @return self
      */
-    public function orWhere($condition, $bind = false) : self
+    public function orWhere(string $condition, $bind = false): self
     {
-        if (!is_array($this->orWhere))
-            $this->orWhere = array();
+        if (!is_array($this->orWhere)) {
+            $this->orWhere = [];
+        }
 
-        $this->orWhere[] = array('condition' => $condition, 'bind' => $bind);
+        $this->orWhere[] = ['condition' => $condition, 'bind' => $bind];
 
         return $this;
     }
@@ -206,16 +217,19 @@ class Select
      * @param mixed $fields string field name or array of field names
      * @return self
      */
-    public function group($fields) : self
+    public function group($fields): self
     {
-        if (!is_array($this->group))
-            $this->group = array();
+        if (!is_array($this->group)) {
+            $this->group = [];
+        }
 
-        if (!is_array($fields))
+        if (!is_array($fields)) {
             $fields = explode(',', $fields);
+        }
 
-        foreach ($fields as $field)
+        foreach ($fields as $field) {
             $this->group[] = $field;
+        }
 
         return $this;
     }
@@ -226,12 +240,13 @@ class Select
      * @param mixed $bind
      * @return self
      */
-    public function having($condition, $bind = false) : self
+    public function having(string $condition, $bind = false): self
     {
-        if (!is_array($this->having))
-            $this->having = array();
+        if (!is_array($this->having)) {
+            $this->having = [];
+        }
 
-        $this->having[] = array('condition' => $condition, 'bind' => $bind);
+        $this->having[] = ['condition' => $condition, 'bind' => $bind];
 
         return $this;
     }
@@ -242,25 +257,26 @@ class Select
      * @param mixed $bind
      * @return self
      */
-    public function orHaving($condition, $bind = false) : self
+    public function orHaving(string $condition, $bind = false): self
     {
-        if (!is_array($this->orHaving))
-            $this->orHaving = array();
+        if (!is_array($this->orHaving)) {
+            $this->orHaving = [];
+        }
 
-        $this->orHaving[] = array('condition' => $condition, 'bind' => $bind);
+        $this->orHaving[] = ['condition' => $condition, 'bind' => $bind];
 
         return $this;
     }
 
     /**
      * Adding another table to the query using JOIN
-     * @param string|array $table
+     * @param string|array<int|string,string> $table
      * @param mixed $cond
      * @param mixed $cols
      * @param string $type
      * @return self
      */
-    public function join($table, $cond, $cols = '*', string $type ='inner') : self
+    public function join($table, $cond, $cols = '*', string $type = 'inner'): self
     {
         $this->addJoin($table, $cond, $cols, $type);
 
@@ -272,12 +288,12 @@ class Select
      * @param mixed $table
      * @param mixed $cond
      * @param mixed $cols
-     * @deprecated
      * @return self
+     * @deprecated
      */
-    public function joinInner($table, $cond, $cols = '*') : self
+    public function joinInner($table, $cond, $cols = '*'): self
     {
-        $this->addJoin( $table, $cond, $cols, self::JOIN_INNER);
+        $this->addJoin($table, $cond, $cols, self::JOIN_INNER);
 
         return $this;
     }
@@ -287,10 +303,10 @@ class Select
      * @param mixed $table
      * @param mixed $cond
      * @param mixed $cols
-     * @deprecated
      * @return self
+     * @deprecated
      */
-    public function joinLeft($table, $cond, $cols = '*') : self
+    public function joinLeft($table, $cond, $cols = '*'): self
     {
         $this->addJoin($table, $cond, $cols, self::JOIN_LEFT);
 
@@ -302,10 +318,10 @@ class Select
      * @param mixed $table
      * @param mixed $cond
      * @param mixed $cols
-     * @deprecated
      * @return self
+     * @deprecated
      */
-    public function joinRight($table, $cond, $cols = '*') : self
+    public function joinRight($table, $cond, $cols = '*'): self
     {
         $this->addJoin($table, $cond, $cols, self::JOIN_RIGHT);
 
@@ -313,25 +329,28 @@ class Select
     }
 
     /**
-     * @param string|array $table
+     * @param string|array<int|string,string> $table
      * @param string $cond
-     * @param array|string $cols
+     * @param array<int|string,string>|string $cols
      * @param string $type
      * @return Select
      */
-    protected function addJoin($table, $cond, $cols, string $type) : self
+    protected function addJoin($table, string $cond, $cols, string $type): self
     {
         if (!is_array($table) || is_int(key($table))) {
-            if (is_array($table))
+            if (is_array($table)) {
                 $table = $table[key($table)];
+            }
 
-            if (!isset($this->aliasCount[$table]))
+            if (!isset($this->aliasCount[$table])) {
                 $this->aliasCount[$table] = 0;
+            }
 
             $tableAlias = $table;
 
-            if ($this->aliasCount[$table])
+            if ($this->aliasCount[$table]) {
                 $tableAlias = $table . '_' . $this->aliasCount[$table];
+            }
 
             $this->aliasCount[$table]++;
 
@@ -342,16 +361,18 @@ class Select
         }
 
         if (!is_array($cols)) {
-            if ($cols !== '*')
+            if ($cols !== '*') {
                 $cols = $this->convertColumnsString($cols);
-            else
+            } else {
                 $cols = array($cols);
+            }
         }
 
-        if (!is_array($this->join))
-            $this->join = array();
+        if (!is_array($this->join)) {
+            $this->join = [];
+        }
 
-        $this->join[] = array('type' => $type, 'table' => $table, 'condition' => $cond, 'columns' => $cols);
+        $this->join[] = ['type' => $type, 'table' => $table, 'condition' => $cond, 'columns' => $cols];
 
         return $this;
     }
@@ -362,7 +383,7 @@ class Select
      * @param mixed $offset - optional
      * @return self
      */
-    public function limit(int $count, $offset = false) : self
+    public function limit(int $count, $offset = false): self
     {
         $this->limit = ['count' => $count, 'offset' => $offset];
         return $this;
@@ -373,7 +394,7 @@ class Select
      * @param int $offset
      * @return self
      */
-    public function offset(int $offset) : self
+    public function offset(int $offset): self
     {
         $this->limit['offset'] = $offset;
         return $this;
@@ -385,7 +406,7 @@ class Select
      * @param int $rowCount Use this many rows per page.
      * @return self
      */
-    public function limitPage(int $page, int $rowCount) : self
+    public function limitPage(int $page, int $rowCount): self
     {
         $page = ($page > 0) ? $page : 1;
         $rowCount = ($rowCount > 0) ? $rowCount : 1;
@@ -396,10 +417,10 @@ class Select
     /**
      * Adding an ORDER clause to the query
      * @param mixed $spec
-     * @param boolean $asIs optional
+     * @param bool $asIs - optional
      * @return self
      */
-    public function order($spec, $asIs = false) : self
+    public function order($spec, bool $asIs = false): self
     {
         if ($asIs) {
             $this->order = array($spec);
@@ -418,10 +439,11 @@ class Select
         } else {
             foreach ($spec as $key => $type) {
                 if (is_int($key)) {
-                    if (strpos(trim($type), ' '))
+                    if (strpos(trim($type), ' ')) {
                         $result[] = $type;
-                    else
+                    } else {
                         $result[] = $this->quoteIdentifier($type);
+                    }
                 } else {
                     $result[] = $this->quoteIdentifier($key) . ' ' . strtoupper($type);
                 }
@@ -437,13 +459,13 @@ class Select
      * @param bool $flag Whether or not the SELECT is FOR UPDATE (default true).
      * @return self
      */
-    public function forUpdate($flag = true) : self
+    public function forUpdate($flag = true): self
     {
         $this->forUpdate = $flag;
         return $this;
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->assemble();
     }
@@ -451,12 +473,14 @@ class Select
     /**
      * @return string
      */
-    public function assemble() : string
+    public function assemble(): string
     {
         $sql = 'SELECT ';
-        foreach ($this->assembleOrder as $method => $data)
-            if (!empty($this->$data))
+        foreach ($this->assembleOrder as $method => $data) {
+            if (!empty($this->$data)) {
                 $sql = $this->$method($sql);
+            }
+        }
         return $sql . ';';
     }
 
@@ -464,45 +488,56 @@ class Select
      * @param string $sql
      * @return string
      */
-    protected function _getDistinct(string $sql) : string
+    protected function getDistinct(string $sql): string
     {
-        if ($this->distinct)
+        if ($this->distinct) {
             $sql .= 'DISTINCT ';
+        }
 
         return $sql;
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function _getFrom($sql) : string
+    protected function getFrom($sql): string
     {
         $columns = $this->tableFieldsList($this->from['table'], $this->from['columns']);
         $tables = array();
 
         $tables[] = $this->tableAlias($this->from['table']);
 
-        if (!empty($this->join))
-            foreach ($this->join as $config)
+        if (!empty($this->join)) {
+            foreach ($this->join as $config) {
                 $columns = array_merge($columns, $this->tableFieldsList($config['table'], $config['columns']));
+            }
+        }
 
         $sql .= implode(', ', $columns) . ' FROM ' . implode(', ', $tables);
 
         return $sql;
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function _getJoins($sql)
+    protected function getJoins($sql)
     {
-        foreach ($this->join as $item)
+        foreach ($this->join as $item) {
             $sql .= $this->compileJoin($item);
+        }
 
         return $sql;
     }
 
-    protected function compileJoin(array $config) : string
+    /**
+     * @param array{type:string,table:mixed,condition:mixed} $config
+     * @phpstan-param array<string|int,mixed> $config
+     * @return string
+     */
+    protected function compileJoin(array $config): string
     {
         $str = '';
         //type, table , condition
@@ -521,11 +556,12 @@ class Select
         $str .= $this->tableAlias($config['table']) . ' ON ' . $config['condition'];
         return $str;
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function _getWhere($sql) : string
+    protected function getWhere($sql): string
     {
         $where = $this->prepareWhere($this->where);
 
@@ -533,10 +569,10 @@ class Select
     }
 
     /**
-     * @param array $list
-     * @return array
+     * @param array<int|string,mixed> $list
+     * @return array<int,string>
      */
-    protected function prepareWhere(array $list) : array
+    protected function prepareWhere(array $list): array
     {
         $where = [];
 
@@ -546,11 +582,11 @@ class Select
             } else {
                 if (is_array($item['bind'])) {
                     $list = [];
-                    foreach ($item['bind'] as $listValue){
-                        if(is_numeric($listValue)){
+                    foreach ($item['bind'] as $listValue) {
+                        if (is_numeric($listValue)) {
                             // disable quoting for numeric values
                             $list[] = $listValue;
-                        }else{
+                        } else {
                             $list[] = $this->quote($listValue);
                         }
                     }
@@ -563,68 +599,77 @@ class Select
         }
         return $where;
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function getOrWhere(string $sql) : string
+    protected function getOrWhere(string $sql): string
     {
         $where = $this->prepareWhere($this->orWhere);
         return $sql . ' OR (' . implode(' ) OR ( ', $where) . ')';
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function getHaving(string $sql) : string
+    protected function getHaving(string $sql): string
     {
         $having = $this->prepareWhere($this->having);
         return $sql . ' HAVING (' . implode(' AND ', $having) . ')';
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function getOrHaving(string $sql) : string
+    protected function getOrHaving(string $sql): string
     {
         $having = $this->prepareWhere($this->orHaving);
         return $sql . ' OR (' . implode(' ) OR ( ', $having) . ')';
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function getGroup(string $sql) : string
+    protected function getGroup(string $sql): string
     {
-        foreach ($this->group as &$item)
+        foreach ($this->group as &$item) {
             $item = $this->quoteIdentifier($item);
+        }
 
         return $sql . ' GROUP BY ' . implode(',', $this->group);
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function getOrder(string $sql) : string
+    protected function getOrder(string $sql): string
     {
         return $sql . ' ORDER BY ' . implode(',', $this->order);
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function getLimit(string $sql) : string
+    protected function getLimit(string $sql): string
     {
-        if ($this->limit['offset'])
+        if ($this->limit['offset']) {
             return $sql . ' LIMIT ' . intval($this->limit['offset']) . ',' . $this->limit['count'];
-        else
+        } else {
             return $sql . ' LIMIT ' . $this->limit['count'];
+        }
     }
+
     /**
      * @param string $sql
      * @return string
      */
-    protected function getForUpdate(string $sql) : string
+    protected function getForUpdate(string $sql): string
     {
         if ($this->forUpdate) {
             return $sql . ' FOR UPDATE';
@@ -638,7 +683,7 @@ class Select
      * @param string $str
      * @return string
      */
-    public function quoteIdentifier(string $str) : string
+    public function quoteIdentifier(string $str): string
     {
         return '`' . str_replace(array('`', '.'), array('', '`.`'), $str) . '`';
     }
@@ -648,40 +693,42 @@ class Select
      * @param mixed $value Raw string
      * @return string Quoted string
      */
-    protected function quote($value) : string
+    protected function quote($value): string
     {
         if (is_int($value)) {
-            return (string) $value;
+            return (string)$value;
         } elseif (is_float($value)) {
             return sprintf('%F', $value);
         }
 
-        if($this->dbAdapter){
+        if ($this->dbAdapter) {
             return $this->dbAdapter->quote((string)$value);
-        }else{
-            return '\'' . addcslashes((string) $value, "\x00\n\r\\'\"\x1a") . '\'';
+        } else {
+            return '\'' . addcslashes((string)$value, "\x00\n\r\\'\"\x1a") . '\'';
         }
     }
 
     /**
-     * @param array|string $table
+     * @param array<int|string,string>|string $table
      * @return string
      */
-    protected function tableAlias($table) : string
+    protected function tableAlias($table): string
     {
         static $cache = [];
 
-        $hash =  null;
+        $hash = null;
 
         // performance patch
         if ($this->localCache) {
-            if (is_array($table))
+            if (is_array($table)) {
                 $hash = md5(serialize($table));
-            else
+            } else {
                 $hash = $table;
+            }
 
-            if (isset($cache[$hash]))
+            if (isset($cache[$hash])) {
                 return $cache[$hash];
+            }
         }
 
         if (!is_array($table)) {
@@ -689,24 +736,26 @@ class Select
         } else {
             $key = key($table);
 
-            if (is_int($key))
+            if (is_int($key)) {
                 $data = $this->quoteIdentifier($table[$key]);
-            else
+            } else {
                 $data = $this->quoteIdentifier($table[$key]) . ' AS ' . $this->quoteIdentifier((string)$key);
+            }
         }
 
-        if ($this->localCache)
+        if ($this->localCache) {
             $cache[$hash] = $data;
+        }
 
         return $data;
     }
 
     /**
      * @param mixed $table
-     * @param array $columns
-     * @return array
+     * @param array<int|string,string> $columns
+     * @return array<int,string>
      */
-    protected function tableFieldsList($table, array $columns) : array
+    protected function tableFieldsList($table, array $columns): array
     {
         static $cache = [];
         $hash = '';
@@ -714,8 +763,9 @@ class Select
         // performance patch
         if ($this->localCache) {
             $hash = md5(serialize(func_get_args()));
-            if (isset($cache[$hash]))
+            if (isset($cache[$hash])) {
                 return $cache[$hash];
+            }
         }
 
         $result = [];
@@ -723,51 +773,56 @@ class Select
         if (is_array($table)) {
             $key = key($table);
 
-            if (is_int($key))
+            if (is_int($key)) {
                 $table = $table[$key];
-            else
+            } else {
                 $table = $key;
+            }
         }
 
         foreach ($columns as $k => $v) {
-            $v = (string) $v;
+            $v = (string)$v;
             $wordsCount = str_word_count($v, 0, "_*\"");
 
             if (is_int($k)) {
-
-                if (!strlen($v))
+                if (!strlen($v)) {
                     continue;
+                }
 
                 if ($v === '*') {
                     $result[] = $this->quoteIdentifier($table) . '.*';
                 } else {
-                    if ($wordsCount === 1)
+                    if ($wordsCount === 1) {
                         $result[] = $this->quoteIdentifier($table . '.' . $v);
-                    else
+                    } else {
                         $result[] = $v;
+                    }
                 }
             } else {
-                if (!strlen($v) || !strlen($k))
+                if (!strlen($v) || !strlen($k)) {
                     continue;
+                }
 
-                if ($wordsCount === 1)
+                if ($wordsCount === 1) {
                     $v = $this->quoteIdentifier($table . '.' . $v);
+                }
 
                 $result[] = $v . ' AS ' . $this->quoteIdentifier($k);
             }
         }
 
-        if ($this->localCache)
+        if ($this->localCache) {
             $cache[$hash] = $result;
+        }
 
         return $result;
     }
 
     /**
      * @param string $str
-     * @return array
+     * @return array<int,string>
      */
-    protected function convertColumnsString(string $str) : array
+    protected function convertColumnsString(string $str): array
     {
         $items = explode(',', $str);
         return array_map('trim', $items);

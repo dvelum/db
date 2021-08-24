@@ -1,4 +1,5 @@
-<?php /**
+<?php
+/**
  * DVelum project https://github.com/dvelum/core , https://github.com/dvelum/dvelum
  * Copyright (C) 2011-2020  Kirill Yegorov
  *
@@ -20,7 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- */ /**
+ */
+
+/**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  * Copyright (C) 2011-2020  Kirill Yegorov
  *
@@ -42,7 +45,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- */ /**
+ */
+/**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
  * MIT License
@@ -67,7 +71,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- */ /** @noinspection PhpMissingBreakStatementInspection */
+ */
+/** @noinspection PhpMissingBreakStatementInspection */
 declare(strict_types=1);
 
 namespace Dvelum\Db\Select;
@@ -103,12 +108,13 @@ class Filter
      * @var string|null
      */
     public $field = null;
+
     /**
      * @param string $field
      * @param string $type
      * @param mixed $value
      */
-    public function __construct($field ,  $value = '' , $type = self::EQ)
+    public function __construct($field, $value = '', $type = self::EQ)
     {
         $this->type = $type;
         $this->value = $value;
@@ -119,30 +125,31 @@ class Filter
      * Apply filter
      * @param Db\Adapter $db
      * @param Db\Select $sql
-     * @throws \Exception
      * @return void
+     * @throws \Exception
      */
-    public function applyTo(Db\Adapter $db , $sql) : void
+    public function applyTo(Db\Adapter $db, $sql): void
     {
-        if(!($sql instanceof Db\Select))
+        if (!($sql instanceof Db\Select)) {
             throw new \Exception('Db\\Select::applyTo  $sql must be instance of Db_Select/Zend_Db_Select');
+        }
 
-        $quotedField = $db->quoteIdentifier((string) $this->field);
-        switch ($this->type)
-        {
+        $quotedField = $db->quoteIdentifier((string)$this->field);
+        switch ($this->type) {
             case self::LIKE:
             case self::NOT_LIKE:
-                if(is_array($this->value)) {
+                if (is_array($this->value)) {
                     $conditions = array();
                     foreach ($this->value as $k => $v) {
                         $quotedField = $db->quoteIdentifier($k);
                         $conditions[] = $quotedField . ' LIKE ' . $db->quote('%' . $v . '%');
                     }
-                    if ($this->type == self::LIKE)
+                    if ($this->type == self::LIKE) {
                         $condition = implode(' OR ', $conditions);
-                    else
+                    } else {
                         $condition = implode(' AND ', $conditions);
-                    $condition = '('.$condition.')';
+                    }
+                    $condition = '(' . $condition . ')';
                     $sql->where($condition);
                     break;
                 }
@@ -152,11 +159,11 @@ class Filter
             case self::GT_EQ:
             case self::LT_EQ:
             case self::NOT:
-                $sql->where($quotedField . ' ' . $this->type . ' ?' , $this->value);
+                $sql->where($quotedField . ' ' . $this->type . ' ?', $this->value);
                 break;
             case self::IN:
             case self::NOT_IN:
-                $sql->where($quotedField . ' ' . $this->type . ' (?)' , $this->value);
+                $sql->where($quotedField . ' ' . $this->type . ' (?)', $this->value);
                 break;
             case self::NOT_NULL :
             case self::IS_NULL :
@@ -164,7 +171,11 @@ class Filter
                 break;
             case self::BETWEEN:
             case self::NOT_BETWEEN:
-                $sql->where($quotedField . ' ' . $this->type . ' ' . $db->quote($this->value[0]) . ' AND ' . $db->quote($this->value[1]));
+                $sql->where(
+                    $quotedField . ' ' . $this->type . ' ' . $db->quote($this->value[0]) . ' AND ' . $db->quote(
+                        $this->value[1]
+                    )
+                );
                 break;
             case self::RAW:
                 $sql->where($this->value);

@@ -1,10 +1,11 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
  * MIT License
  *
- * Copyright (C) 2011-2020  Kirill Yegorov
+ * Copyright (C) 2011-2021  Kirill Yegorov
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +26,8 @@
  * SOFTWARE.
  *
  */
-namespace  Dvelum\Db;
 
-use Dvelum\Config\ConfigInterface;
+namespace Dvelum\Db;
 
 interface ManagerInterface
 {
@@ -38,14 +38,15 @@ interface ManagerInterface
      * @param null|string $shard
      * @return Adapter
      */
-    public function getDbConnection(string $name, ?string $workMode = null, ?string $shard = null) : Adapter;
+    public function getDbConnection(string $name, ?string $workMode = null, ?string $shard = null): Adapter;
+
     /**
      * Get DB connection config
      * @param string $name
+     * @return array<int|string,mixed>
      * @throws \Exception
-     * @return ConfigInterface
      */
-    public function getDbConfig(string $name) : ConfigInterface;
+    public function getDbConfig(string $name): array;
 
     /**
      * Set handler for connection error

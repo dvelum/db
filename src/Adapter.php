@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
@@ -30,9 +31,10 @@ declare(strict_types=1);
 namespace Dvelum\Db;
 
 use Laminas\Db;
-use Laminas\Db\Sql\Sql;
+use Laminas\Db\Adapter\Adapter as LaminasAdapter;
 use Laminas\Db\Adapter\Driver\ResultInterface;
 use Laminas\Db\ResultSet\ResultSet;
+use Laminas\Db\Sql\Sql;
 
 
 /**
@@ -42,28 +44,28 @@ use Laminas\Db\ResultSet\ResultSet;
 class Adapter
 {
     public const EVENT_INIT = 0;
-    public const EVENT_CONNECTION_ERROR =1;
+    public const EVENT_CONNECTION_ERROR = 1;
 
     /**
-     * @var array
+     * @var array<string,mixed>
      */
-    protected $params;
+    protected array $params;
     /**
-     * @var \Laminas\Db\Adapter\Adapter $adapter
+     * @var LaminasAdapter $adapter
      */
-    protected $adapter;
+    protected LaminasAdapter $adapter;
     /**
-     * @var array
+     * @var array<int|string,array>
      */
-    protected $listeners;
+    protected array $listeners;
     /**
      * @var bool
      */
-    private $inited = false;
+    private bool $inited = false;
 
     /**
      * Adapter constructor.
-     * @param array $params
+     * @param array<string,mixed> $params
      */
     public function __construct(array $params)
     {
@@ -73,18 +75,18 @@ class Adapter
     /**
      * @return void
      */
-    public function init() : void
+    public function init(): void
     {
-        if($this->inited){
+        if ($this->inited) {
             return;
         }
 
         $this->adapter = new \Laminas\Db\Adapter\Adapter($this->params);
         $this->inited = true;
-        try{
+        try {
             $this->adapter->getDriver()->getConnection()->connect();
-        }catch (\Exception $e){
-            $this->fireEvent(self::EVENT_CONNECTION_ERROR, ['message'=>$e->getMessage()]);
+        } catch (\Exception $e) {
+            $this->fireEvent(self::EVENT_CONNECTION_ERROR, ['message' => $e->getMessage()]);
             return;
         }
         $this->fireEvent(self::EVENT_INIT);
@@ -93,9 +95,9 @@ class Adapter
     /**
      * @return Db\Adapter\Adapter
      */
-    public function getAdapter() :  Db\Adapter\Adapter
+    public function getAdapter(): Db\Adapter\Adapter
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         return $this->adapter;
@@ -105,7 +107,7 @@ class Adapter
      * Get Select query builder
      * @return Select
      */
-    public function select() : Select
+    public function select(): Select
     {
         $select = new Select();
         $select->setDbAdapter($this);
@@ -115,12 +117,12 @@ class Adapter
     /**
      * @return Sql
      */
-    public function sql() : Sql
+    public function sql(): Sql
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
-        return  new Sql($this->adapter);
+        return new Sql($this->adapter);
     }
 
     /**
@@ -129,7 +131,7 @@ class Adapter
      */
     public function getProfiler(): ?Db\Adapter\Profiler\ProfilerInterface
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             return null;
         }
         return $this->adapter->getProfiler();
@@ -137,12 +139,12 @@ class Adapter
 
     /**
      * Fetch results
-     * @param string|\Dvelum\Db\Select $sql
-     * @return array
+     * @param string|Select $sql
+     * @return array<int,array>
      */
-    public function fetchAll($sql) : array
+    public function fetchAll($sql): array
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
 
@@ -151,28 +153,24 @@ class Adapter
         $statement->prepare();
 
         $result = $statement->execute();
-        if ($result instanceof ResultInterface && $result->isQueryResult())
-        {
+        if ($result instanceof ResultInterface && $result->isQueryResult()) {
             /*
              *  Mysqli performance patch
              */
-            if($this->params['adapter'] === 'Mysqli') {
+            if ($this->params['adapter'] === 'Mysqli') {
                 /**
                  * @var \mysqli_stmt $resource
                  */
                 $resource = $result->getResource();
                 $result = $resource->get_result();
-                if($result){
-                    /**
-                     * @var \mysqli_result $result
-                     */
+                if ($result) {
                     $data = $result->fetch_all(MYSQLI_ASSOC);
-                    if(!empty($data)){
+                    if (!empty($data)) {
                         return $data;
                     }
                 }
                 return [];
-            }else{
+            } else {
                 $resultSet = new ResultSet(ResultSet::TYPE_ARRAY);
                 return $resultSet->initialize($result)->toArray();
             }
@@ -183,11 +181,11 @@ class Adapter
     /**
      * Fetch column from result set
      * @param mixed $sql
-     * @return array
+     * @return array<int,mixed>
      */
-    public function fetchCol($sql) : array
+    public function fetchCol($sql): array
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
 
@@ -200,34 +198,31 @@ class Adapter
             /*
              *  Mysqli performance patch
              */
-            if($this->params['adapter'] === 'Mysqli') {
+            if ($this->params['adapter'] === 'Mysqli') {
                 /**
                  * @var \mysqli_stmt $resource
                  */
                 $resource = $result->getResource();
                 $result = $resource->get_result();
 
-                if($result){
-                    /**
-                     * @var \mysqli_result $result
-                     */
+                if ($result) {
                     $resultData = $result->fetch_all(MYSQLI_NUM);
-                    if(!empty($resultData)){
+                    if (!empty($resultData)) {
                         $data = [];
-                        foreach ($resultData as $item){
+                        foreach ($resultData as $item) {
                             $data[] = $item[0];
                         }
                         return $data;
                     }
                 }
                 return [];
-            }else {
+            } else {
                 $resultSet = new ResultSet(ResultSet::TYPE_ARRAY);
                 $resultSet->initialize($result);
                 $result = [];
-                if(!empty($resultSet)){
+                if (!empty($resultSet)) {
                     foreach ($resultSet as $item) {
-                        if(!empty($item)){
+                        if (!empty($item)) {
                             foreach ($item as $v) {
                                 $result[] = $v;
                                 break;
@@ -248,7 +243,7 @@ class Adapter
      */
     public function fetchOne($sql)
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
 
@@ -262,11 +257,11 @@ class Adapter
             $resultSet = new ResultSet(ResultSet::TYPE_ARRAY);
             $resultSet->initialize($result);
             /**
-             * @var array $result
+             * @var array<int|string,mixed> $result
              */
             $result = $resultSet->current();
-            if(!empty($result)){
-                return  array_values($result)[0];
+            if (!empty($result)) {
+                return array_values($result)[0];
             }
         }
         return null;
@@ -274,12 +269,12 @@ class Adapter
 
     /**
      * Execute query
-     * @param mixed  $sql
+     * @param mixed $sql
      * @return void
      */
-    public function query($sql) : void
+    public function query($sql): void
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         $this->adapter->query($sql, Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
@@ -288,11 +283,11 @@ class Adapter
     /**
      * Fetch row from result set
      * @param mixed $sql
-     * @return array
+     * @return array<int|string,mixed>
      */
-    public function fetchRow($sql) : array
+    public function fetchRow($sql): array
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
 
@@ -305,10 +300,10 @@ class Adapter
             $resultSet = new ResultSet(ResultSet::TYPE_ARRAY);
             $resultSet->initialize($result);
             /**
-             * @var array $resultData
+             * @var array<int|string,mixed> $resultData
              */
             $resultData = $resultSet->current();
-            if(empty($resultData)){
+            if (empty($resultData)) {
                 $resultData = [];
             }
             return $resultData;
@@ -321,15 +316,15 @@ class Adapter
      * @param string $string
      * @return string
      */
-    public function quoteIdentifier(string $string) : string
+    public function quoteIdentifier(string $string): string
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
 
-        if($this->adapter->getPlatform()->getName() === 'MySQL'){
-            return '`'.str_replace(['`','.'], ['','`.`'], $string).'`';
-        }else{
+        if ($this->adapter->getPlatform()->getName() === 'MySQL') {
+            return '`' . str_replace(['`', '.'], ['', '`.`'], $string) . '`';
+        } else {
             return $this->adapter->getPlatform()->quoteIdentifier($string);
         }
     }
@@ -339,9 +334,9 @@ class Adapter
      * @param mixed $value
      * @return string
      */
-    public function quote($value) : string
+    public function quote($value): string
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
 
@@ -350,9 +345,9 @@ class Adapter
 
     /**
      * Get adapter config
-     * @return array
+     * @return array<string,mixed>
      */
-    public function getConfig() : array
+    public function getConfig(): array
     {
         return $this->params;
     }
@@ -363,7 +358,7 @@ class Adapter
      */
     public function listTables()
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
 
@@ -375,9 +370,9 @@ class Adapter
      * Get metadata object for current DB connection
      * @return Metadata
      */
-    public function getMeta() : Metadata
+    public function getMeta(): Metadata
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         return new Metadata($this->adapter);
@@ -387,9 +382,9 @@ class Adapter
      * Start transaction
      * @return void
      */
-    public function beginTransaction() : void
+    public function beginTransaction(): void
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         $this->adapter->getDriver()->getConnection()->beginTransaction();
@@ -399,9 +394,9 @@ class Adapter
      * Rollback transaction
      * @return void
      */
-    public function rollback() : void
+    public function rollback(): void
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         $this->adapter->getDriver()->getConnection()->rollback();
@@ -410,9 +405,9 @@ class Adapter
     /**
      * @return void
      */
-    public function commit() : void
+    public function commit(): void
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         $this->adapter->getDriver()->getConnection()->commit();
@@ -421,14 +416,14 @@ class Adapter
     /**
      * Fix for mysqli driver
      * convert bool into integer
-     * @param array $values
-     * @return array
+     * @param array<int|string,mixed> $values
+     * @return array<int|string,mixed>
      */
-    protected function convertBooleanValues(array $values) : array
+    protected function convertBooleanValues(array $values): array
     {
-        foreach ($values as &$value){
-            if(is_bool($value)){
-                $value = intval($value);
+        foreach ($values as &$value) {
+            if (is_bool($value)) {
+                $value = (int)$value;
             }
         }
         return $values;
@@ -437,12 +432,12 @@ class Adapter
     /**
      * Insert record
      * @param string $table
-     * @param array $values
+     * @param array<int|string,mixed> $values
      * @return void
      */
-    public function insert(string $table , array $values) : void
+    public function insert(string $table, array $values): void
     {
-        if(!empty($values) && $this->params['adapter'] === 'Mysqli'){
+        if (!empty($values) && $this->params['adapter'] === 'Mysqli') {
             $values = $this->convertBooleanValues($values);
         }
 
@@ -460,12 +455,12 @@ class Adapter
      * @param string|null $where
      * @return void
      */
-    public function delete(string $table, ?string $where = null) : void
+    public function delete(string $table, ?string $where = null): void
     {
         $sql = $this->sql();
         $delete = $sql->delete($table);
 
-        if(!empty($where)){
+        if (!empty($where)) {
             $delete->where($where);
         }
 
@@ -476,13 +471,13 @@ class Adapter
     /**
      * Update records using where condition
      * @param string $table
-     * @param array $values
+     * @param array<int|string,mixed> $values
      * @param string|null $where
      * @return void
      */
-    public function update(string $table, array $values, $where = null ) : void
+    public function update(string $table, array $values, ?string $where = null): void
     {
-        if(!empty($values) && $this->params['adapter'] === 'Mysqli'){
+        if (!empty($values) && $this->params['adapter'] === 'Mysqli') {
             $values = $this->convertBooleanValues($values);
         }
 
@@ -490,7 +485,7 @@ class Adapter
         $update = $sql->update($table);
         $update->set($values);
 
-        if(!empty($where)){
+        if (!empty($where)) {
             $update->where($where);
         }
 
@@ -506,20 +501,20 @@ class Adapter
      */
     public function lastInsertId($tableName = null, $primaryKey = null)
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         return $this->adapter->getDriver()->getLastGeneratedValue();
     }
 
     /**
-     * @deprecated
-     * @param array $values
+     * @param array<int,mixed> $values
      * @return string
+     * @deprecated
      */
-    public function quoteValueList(array $values) : string
+    public function quoteValueList(array $values): string
     {
-        if(!$this->inited){
+        if (!$this->inited) {
             $this->init();
         }
         return $this->adapter->getPlatform()->quoteValueList($values);
@@ -530,9 +525,9 @@ class Adapter
      * @param int $eventCode
      * @param callable $listener
      */
-    public function on(int $eventCode, callable $listener) : void
+    public function on(int $eventCode, callable $listener): void
     {
-        if(!isset($this->listeners[$eventCode])){
+        if (!isset($this->listeners[$eventCode])) {
             $this->listeners[$eventCode] = [];
         }
         $this->listeners[$eventCode][] = $listener;
@@ -540,19 +535,16 @@ class Adapter
 
     /**
      * @param int $eventCode
-     * @param array|null $data
+     * @param array<int|string,mixed> $data
      */
-    protected function fireEvent(int $eventCode , ?array $data = []) : void
+    protected function fireEvent(int $eventCode, array $data = []): void
     {
-        /**
-         * @var array $data
-         */
-        if(isset($this->listeners[$eventCode])){
-            foreach ($this->listeners[$eventCode] as $listener){
+        if (isset($this->listeners[$eventCode])) {
+            foreach ($this->listeners[$eventCode] as $listener) {
                 /**
                  * @var callable $listener
                  */
-                $listener(new Adapter\Event($eventCode , $data));
+                $listener(new Adapter\Event($eventCode, $data));
             }
         }
     }

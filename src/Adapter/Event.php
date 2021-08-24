@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DVelum project https://github.com/dvelum/dvelum-core , https://github.com/dvelum/dvelum
  *
@@ -27,47 +28,64 @@
  */
 declare(strict_types=1);
 
-namespace Dvelum\Db\Metadata;
+namespace Dvelum\Db\Adapter;
 
-
-use Laminas\Db\Adapter\AdapterInterface;
-use Laminas\Db\Exception\InvalidArgumentException;
-use Laminas\Db\Metadata\MetadataInterface;
-use Laminas\Db\Metadata\Source;
-
-/**
- * Source metadata factory.
- */
-class Factory
+class Event
 {
+
     /**
-     * Create source from adapter
-     *
-     * @param  AdapterInterface $adapter
-     * @return MetadataInterface
-     * @throws InvalidArgumentException If adapter platform name not recognized.
+     * @var int $code
      */
-    public static function createSourceFromAdapter(AdapterInterface $adapter)
+    protected $code;
+    /**
+     * @var array<int|string,mixed> $data
+     */
+    protected $data;
+
+    /**
+     * @param int $code
+     * @param array<int|string,mixed> $data
+     */
+    public function __construct(int $code, array $data = [])
     {
-        /**
-         * @var  \Laminas\Db\Adapter\Adapter $adapter
-         */
-
-        $platformName = $adapter->getPlatform()->getName();
-
-        switch ($platformName) {
-            case 'MySQL':
-                return new Mysql($adapter);
-            case 'SQLServer':
-                return new Source\SqlServerMetadata($adapter);
-            case 'SQLite':
-                return new Source\SqliteMetadata($adapter);
-            case 'PostgreSQL':
-                return new Source\PostgresqlMetadata($adapter);
-            case 'Oracle':
-                return new Source\OracleMetadata($adapter);
-            default:
-                throw new InvalidArgumentException("Unknown adapter platform '{$platformName}'");
-        }
+        $this->code = $code;
+        $this->data = $data;
     }
+
+    /**
+     * Get event code
+     * @return int
+     */
+    public function getCode(): int
+    {
+        return $this->code;
+    }
+
+    /**
+     * Set event code
+     * @param int $code
+     */
+    public function setCode(int $code): void
+    {
+        $this->code = $code;
+    }
+
+    /**
+     * Get event data
+     * @return array<int|string,mixed>
+     */
+    public function getData(): array
+    {
+        return $this->data;
+    }
+
+    /**
+     * Set event data
+     * @param array<int|string,mixed> $data
+     */
+    public function setData(array $data): void
+    {
+        $this->data = $data;
+    }
+
 }
