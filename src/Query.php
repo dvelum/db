@@ -171,7 +171,7 @@ class Query
     public function applyFilters(Db\Select $sql, array $filters): void
     {
         foreach ($filters as $k => $v) {
-            $k = (string) $k;
+            $k = (string)$k;
             if ($v instanceof Filter) {
                 $v->applyTo($this->db, $sql);
             } else {

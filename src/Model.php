@@ -71,8 +71,11 @@ abstract class Model
      * @param ManagerInterface $dbManager
      * @throws \Exception
      */
-    protected function __construct(ManagerInterface $dbManager, ?LoggerInterface $log = null, ?CacheInterface $cache = null)
-    {
+    protected function __construct(
+        ManagerInterface $dbManager,
+        ?LoggerInterface $log = null,
+        ?CacheInterface $cache = null
+    ) {
         $this->log = $log;
         $this->dbManager = $dbManager;
         $this->db = $this->dbManager->getDbConnection($this->connection);

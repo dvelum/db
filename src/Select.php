@@ -659,7 +659,7 @@ class Select
     protected function getLimit(string $sql): string
     {
         if ($this->limit['offset']) {
-            return $sql . ' LIMIT ' . intval($this->limit['offset']) . ',' . $this->limit['count'];
+            return $sql . ' LIMIT ' . (int)($this->limit['offset']) . ',' . $this->limit['count'];
         } else {
             return $sql . ' LIMIT ' . $this->limit['count'];
         }
