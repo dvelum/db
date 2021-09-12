@@ -283,7 +283,7 @@ class Adapter
     /**
      * Fetch row from result set
      * @param mixed $sql
-     * @return array<int|string,mixed>
+     * @return array<string,mixed>
      */
     public function fetchRow($sql): array
     {
@@ -306,6 +306,9 @@ class Adapter
             if (empty($resultData)) {
                 $resultData = [];
             }
+            /**
+             * @var array<string,mixed> $resultData
+             */
             return $resultData;
         }
         return [];
